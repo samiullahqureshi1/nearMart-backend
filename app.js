@@ -21,12 +21,15 @@ app.use("/test", (req, res) => {
 app.use(bodyParser.urlencoded({ extended: true, limit: "50mb" }));
 
 // config
+// if (process.env.NODE_ENV !== "PRODUCTION") {
+//   require("dotenv").config({
+//     path: "config/.env",
+//   });
+// }
 if (process.env.NODE_ENV !== "PRODUCTION") {
-  require("dotenv").config({
-    path: "config/.env",
-  });
-}
+ require("dotenv").config();
 
+}
 // import routes
 const user = require("./controller/user");
 const shop = require("./controller/shop");

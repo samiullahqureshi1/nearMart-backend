@@ -11,51 +11,103 @@ const ErrorHandler = require("../utils/ErrorHandler");
 const sendShopToken = require("../utils/shopToken");
 
 // create shop
+// router.post(
+//   "/create-shop",
+//   catchAsyncErrors(async (req, res, next) => {
+//     try {
+//       const { email } = req.body;
+//       const sellerEmail = await Shop.findOne({ email });
+//       if (sellerEmail) {
+//         return next(new ErrorHandler("User already exists", 400));
+//       }
+
+//       const myCloud = await cloudinary.v2.uploader.upload(req.body.avatar, {
+//         folder: "avatars",
+//       });
+
+//       const seller = {
+//         name: req.body.name,
+//         email: email,
+//         password: req.body.password,
+//         avatar: {
+//           public_id: myCloud.public_id,
+//         url: myCloud.secure_url,
+//         },
+//         address: req.body.address,
+//         phoneNumber: req.body.phoneNumber,
+//         zipCode: req.body.zipCode,
+//       };
+
+//       const activationToken = createActivationToken(seller);
+//       console.log(activationToken, "activationToken");
+
+//       const activationUrl = `http://localhost:3000/seller/activation/${activationToken}`;
+
+//       try {
+//         await sendMail({
+//           email: seller.email,
+//           subject: "Activate your Shop",
+//           message: `Hello ${seller.name}, please click on the link to activate your shop: ${activationUrl}`,
+//         });
+//         res.status(201).json({
+//           success: true,
+//           message: `please check your email:- ${seller.email} to activate your shop!`,
+//         });
+//       } catch (error) {
+//         return next(new ErrorHandler(error.message, 500));
+//       }
+//     } catch (error) {
+//       return next(new ErrorHandler(error.message, 400));
+//     }
+//   })
+// );
 router.post(
   "/create-shop",
   catchAsyncErrors(async (req, res, next) => {
     try {
-      const { email } = req.body;
+      const { name, email, password, address, phoneNumber, zipCode } = req.body;
+
+      // Check if seller already exists
       const sellerEmail = await Shop.findOne({ email });
       if (sellerEmail) {
         return next(new ErrorHandler("User already exists", 400));
       }
 
-      const myCloud = await cloudinary.v2.uploader.upload(req.body.avatar, {
-        folder: "avatars",
+      // Create seller with default avatar
+      const seller = await Shop.create({
+        name,
+        email,
+        password,
+        avatar: {
+          public_id: "default_avatar",
+          url: "https://icon-library.com/images/anonymous-avatar-icon/anonymous-avatar-icon-25.jpg",
+        },
+        address,
+        phoneNumber,
+        zipCode,
       });
 
-      const seller = {
-        name: req.body.name,
-        email: email,
-        password: req.body.password,
-        avatar: {
-          public_id: myCloud.public_id,
-        url: myCloud.secure_url,
-        },
-        address: req.body.address,
-        phoneNumber: req.body.phoneNumber,
-        zipCode: req.body.zipCode,
-      };
-
-      const activationToken = createActivationToken(seller);
-      console.log(activationToken, "activationToken");
-
+      // Optionally generate a token (e.g., for activation or auth)
+      const activationToken = createActivationToken(seller.toObject());
       const activationUrl = `http://localhost:3000/seller/activation/${activationToken}`;
+      console.log("Activation URL:", activationUrl);
 
-      try {
-        await sendMail({
+      res.status(201).json({
+        success: true,
+        message: "Shop created successfully.",
+        seller: {
+          _id: seller._id,
+          name: seller.name,
           email: seller.email,
-          subject: "Activate your Shop",
-          message: `Hello ${seller.name}, please click on the link to activate your shop: ${activationUrl}`,
-        });
-        res.status(201).json({
-          success: true,
-          message: `please check your email:- ${seller.email} to activate your shop!`,
-        });
-      } catch (error) {
-        return next(new ErrorHandler(error.message, 500));
-      }
+          address: seller.address,
+          phoneNumber: seller.phoneNumber,
+          zipCode: seller.zipCode,
+          avatar: seller.avatar,
+        },
+        activationToken,
+        activationUrl, 
+      });
+
     } catch (error) {
       return next(new ErrorHandler(error.message, 400));
     }
