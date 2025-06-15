@@ -13,7 +13,7 @@ const cors = require("cors");
 // );
 app.use(
   cors({
-    origin: ["https://nearmart-frontend.vercel.app/"],
+    origin: ["https://nearmart-frontend.vercel.app"],
     credentials: true,
   })
 );
