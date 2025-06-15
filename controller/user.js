@@ -8,6 +8,8 @@ const jwt = require("jsonwebtoken");
 const sendMail = require("../utils/sendMail");
 const sendToken = require("../utils/jwtToken");
 const { isAuthenticated, isAdmin } = require("../middleware/auth");
+const shop = require("../model/shop");
+const sendShopToken = require("../utils/shopToken");
 
 // create user
 // router.post("/create-user", async (req, res, next) => {
@@ -145,6 +147,36 @@ router.post(
 );
 
 // login user
+// router.post(
+//   "/login-user",
+//   catchAsyncErrors(async (req, res, next) => {
+//     try {
+//       const { email, password } = req.body;
+
+//       if (!email || !password) {
+//         return next(new ErrorHandler("Please provide the all fields!", 400));
+//       }
+
+//       const user = await User.findOne({ email }).select("+password");
+
+//       if (!user) {
+//         return next(new ErrorHandler("User doesn't exists!", 400));
+//       }
+
+//       const isPasswordValid = await user.comparePassword(password);
+
+//       if (!isPasswordValid) {
+//         return next(
+//           new ErrorHandler("Please provide the correct information", 400)
+//         );
+//       }
+
+//       sendToken(user, 201, res);
+//     } catch (error) {
+//       return next(new ErrorHandler(error.message, 500));
+//     }
+//   })
+// );
 router.post(
   "/login-user",
   catchAsyncErrors(async (req, res, next) => {
@@ -152,24 +184,34 @@ router.post(
       const { email, password } = req.body;
 
       if (!email || !password) {
-        return next(new ErrorHandler("Please provide the all fields!", 400));
+        return next(new ErrorHandler("Please provide email and password!", 400));
       }
 
-      const user = await User.findOne({ email }).select("+password");
+      // Check in User model
+      let user = await User.findOne({ email }).select("+password");
+      let userType = "user";
+
+      // If not found in User, check in Shop model
+      if (!user) {
+        user = await shop.findOne({ email }).select("+password");
+        userType = "shop";
+      }
 
       if (!user) {
-        return next(new ErrorHandler("User doesn't exists!", 400));
+        return next(new ErrorHandler("User does not exist!", 400));
       }
 
       const isPasswordValid = await user.comparePassword(password);
-
       if (!isPasswordValid) {
-        return next(
-          new ErrorHandler("Please provide the correct information", 400)
-        );
+        return next(new ErrorHandler("Invalid email or password", 400));
       }
 
-      sendToken(user, 201, res);
+      // Send token based on type
+      if (userType === "user") {
+        return sendToken(user, 200, res);
+      } else {
+        return sendShopToken(user, 200, res);
+      }
     } catch (error) {
       return next(new ErrorHandler(error.message, 500));
     }

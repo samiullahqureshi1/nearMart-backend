@@ -5,18 +5,18 @@ const cookieParser = require("cookie-parser");
 const bodyParser = require("body-parser");
 const cors = require("cors");
 
-// app.use(
-//   cors({
-//     origin: ["http://localhost:3000"],
-//     credentials: true,
-//   })
-// );
 app.use(
   cors({
-    origin: ["https://nearmart-frontend.vercel.app"],
+    origin: ["http://localhost:3000"],
     credentials: true,
   })
 );
+// app.use(
+//   cors({
+//     origin: ["https://nearmart-frontend.vercel.app", "http://localhost:3000"],
+//     credentials: true,
+//   })
+// );
 app.use(express.json());
 app.use(cookieParser());
 app.use("/test", (req, res) => {
@@ -32,8 +32,7 @@ app.use(bodyParser.urlencoded({ extended: true, limit: "50mb" }));
 //   });
 // }
 if (process.env.NODE_ENV !== "PRODUCTION") {
- require("dotenv").config();
-
+  require("dotenv").config();
 }
 // import routes
 const user = require("./controller/user");
