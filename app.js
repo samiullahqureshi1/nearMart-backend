@@ -56,4 +56,8 @@ app.use("/api/v2/withdraw", withdraw);
 // it's for ErrorHandling
 app.use(ErrorHandler);
 
+app.get("/", (req, res) => {
+  res.send("Working properly");
+});
+
 module.exports = app;
